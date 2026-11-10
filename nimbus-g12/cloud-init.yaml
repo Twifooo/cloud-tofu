@@ -1,0 +1,29 @@
+#cloud-config
+package_update: true
+packages:
+  - nginx
+
+write_files:
+  - path: /tmp/nimbus-site.conf
+    content: |
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          root /var/www/html;
+          index index.html;
+
+          location = /sante {
+              default_type text/plain;
+              return 200 "OK-nimbus\n";
+          }
+
+          location / {
+              try_files $uri $uri/ =404;
+          }
+      }
+
+runcmd:
+  - cp /tmp/nimbus-site.conf /etc/nginx/sites-available/default
+  - echo "<html><body><h1>NimbusShop</h1><p>Servi par $(hostname)</p></body></html>" > /var/www/html/index.html
+  - systemctl enable nginx
+  - systemctl restart nginx
